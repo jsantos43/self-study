@@ -1,0 +1,40 @@
+# constraints.cst — Lab 01: Tabuada
+# Tang Nano 20K (GW2AR-LV18QN88C8/I7)
+
+# ── Clock 27MHz ───────────────────────────────────────────────
+IO_LOC "SYSCLOK" 4;
+IO_PORT "SYSCLOK" IO_TYPE=LVCMOS33;
+CLOCK_LOC "SYSCLOK" BUFG;
+
+# ── Botão onboard S1 (ativo em nível baixo) ───────────────────
+IO_LOC "KEY" 88;
+IO_PORT "KEY" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+
+# ── DIP switches externos (pinos do header — preencher após verificar na placa)
+IO_LOC "SW[0]" 31;
+IO_LOC "SW[1]" 30;
+IO_LOC "SW[2]" 29;
+IO_LOC "SW[3]" 26;
+IO_PORT "SW[0]" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+IO_PORT "SW[1]" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+IO_PORT "SW[2]" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+IO_PORT "SW[3]" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+
+# ── Display 7 segmentos externo (pinos do header — preencher após verificar na placa)
+# dec7seg: segs[6:0] = g,f,e,d,c,b,a
+IO_LOC "HEX0[0]" 80;  # a
+IO_LOC "HEX0[1]" 42;  # b
+IO_LOC "HEX0[2]" 41;  # c
+IO_LOC "HEX0[3]" 56;  # d
+IO_LOC "HEX0[4]" 54;  # e
+IO_LOC "HEX0[5]" 51;  # f
+IO_LOC "HEX0[6]" 48;  # g
+#IO_LOC "seg_cat" ???; # common anode/cathode
+IO_PORT "HEX0[0]" IO_TYPE=LVCMOS33;
+IO_PORT "HEX0[1]" IO_TYPE=LVCMOS33;
+IO_PORT "HEX0[2]" IO_TYPE=LVCMOS33;
+IO_PORT "HEX0[3]" IO_TYPE=LVCMOS33;
+IO_PORT "HEX0[4]" IO_TYPE=LVCMOS33;
+IO_PORT "HEX0[5]" IO_TYPE=LVCMOS33;
+IO_PORT "HEX0[6]" IO_TYPE=LVCMOS33;
+#IO_PORT "seg_cat" IO_TYPE=LVCMOS33;
