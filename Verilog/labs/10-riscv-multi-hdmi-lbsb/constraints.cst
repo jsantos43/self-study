@@ -1,0 +1,57 @@
+// Constraints para Sipeed Tang Nano 20K (GW2AR-LV18QN88C8/I7)
+// Processador RISC-V multiciclo com video HDMI (DVI 640x480 @ 60 Hz)
+
+// ------------------------------------------------------------
+// Clock do sistema: cristal de 27 MHz
+// ------------------------------------------------------------
+IO_LOC  "CLOCK_27" 4;
+IO_PORT "CLOCK_27" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+
+// ------------------------------------------------------------
+// Botao S2 -> reset (ativo em nivel ALTO)
+// ------------------------------------------------------------
+IO_LOC  "reset" 87;
+IO_PORT "reset" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+
+// ------------------------------------------------------------
+// HDMI (TMDS diferencial: pino P, pino N)
+// canal 0 = azul + HS/VS, canal 1 = verde, canal 2 = vermelho
+// ------------------------------------------------------------
+IO_LOC  "tmds_clk_p" 33,34;
+IO_PORT "tmds_clk_p" PULL_MODE=NONE DRIVE=8;
+IO_LOC  "tmds_d0_p" 35,36;
+IO_PORT "tmds_d0_p" PULL_MODE=NONE DRIVE=8;
+IO_LOC  "tmds_d1_p" 37,38;
+IO_PORT "tmds_d1_p" PULL_MODE=NONE DRIVE=8;
+IO_LOC  "tmds_d2_p" 39,40;
+IO_PORT "tmds_d2_p" PULL_MODE=NONE DRIVE=8;
+
+// ------------------------------------------------------------
+// LEDs (saida escrita pelo programa em 0x0000_0104)
+// LEDR[0]..LEDR[5]: LEDs da placa (ativos em nivel BAIXO)
+// ------------------------------------------------------------
+IO_LOC  "LEDR[0]" 15;
+IO_PORT "LEDR[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_LOC  "LEDR[1]" 16;
+IO_PORT "LEDR[1]" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_LOC  "LEDR[2]" 17;
+IO_PORT "LEDR[2]" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_LOC  "LEDR[3]" 18;
+IO_PORT "LEDR[3]" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_LOC  "LEDR[4]" 19;
+IO_PORT "LEDR[4]" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_LOC  "LEDR[5]" 20;
+IO_PORT "LEDR[5]" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+
+// ------------------------------------------------------------
+// LEDR[6]..LEDR[9]: a placa so tem 6 LEDs, entao estes saem
+// nos pinos livres do header (ligar LEDs externos com resistor)
+// ------------------------------------------------------------
+IO_LOC  "LEDR[6]" 25;
+IO_PORT "LEDR[6]" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_LOC  "LEDR[7]" 26;
+IO_PORT "LEDR[7]" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_LOC  "LEDR[8]" 27;
+IO_PORT "LEDR[8]" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_LOC  "LEDR[9]" 28;
+IO_PORT "LEDR[9]" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;

@@ -1,68 +1,76 @@
-module top #(parameter VGA_BITS = 4) (
-  input CLOCK_50, // 50MHz
-  input [9:0] SW,
+// Tang Nano 20K: RISC-V multiciclo com video HDMI (DVI) 640x480 @ 60 Hz
+module top (
+  input            CLOCK_27,  // 27MHz
+  input            reset,     // botao S2 (ativo alto)
   output reg [9:0] LEDR,
-  output [6:0] HEX5, HEX4, HEX3, HEX2, HEX1, HEX0,
-  output [VGA_BITS-1:0] VGA_R, VGA_G, VGA_B,
-  output VGA_HS, VGA_VS,
-  output reg VGA_CLK);
+  // HDMI: portas escalares (o nextpnr nao pareia bem LVDS em barramento)
+  output           tmds_clk_p, tmds_clk_n,
+  output           tmds_d0_p, tmds_d0_n,   // azul + HS/VS
+  output           tmds_d1_p, tmds_d1_n,   // verde
+  output           tmds_d2_p, tmds_d2_n);  // vermelho
 
-  wire VGA_DA; // In display area
-  
-  wire memwrite, clk, reset, halt;
+  wire memwrite, clk, rst, por, halt;
   wire [ 3:0] writemask;
   wire [31:0] pc, instr;
   wire [31:0] writedata, addr, readdata;
   wire [31:0] vaddr, vdata;
   wire [ 7:0] vbyte = vaddr[1] ? (vaddr[0] ? vdata[31:24] : vdata[23:16])
                                : (vaddr[0] ? vdata[15: 8] : vdata[ 7: 0]);
-  integer counter = 0; 
-  
-  always @(posedge CLOCK_50)
-    VGA_CLK <= ~VGA_CLK;
 
-  always @(posedge CLOCK_50) 
-      counter <= counter + 1;
+  // clocks: pixel 25,2 MHz e TMDS 126 MHz (5x, serializacao DDR 10:1)
+  wire clk_pix, clk_tmds, pll_lock;
   `ifdef SIM
-  assign clk = counter[0];  
-  `else     
-  assign clk = CLOCK_50;
+  integer counter = 0;
+  always @(posedge CLOCK_27)
+    counter <= counter + 1;
+  assign clk_pix  = counter[0];
+  assign clk_tmds = CLOCK_27;
+  assign pll_lock = 1'b1;
+  `else
+  // 27 MHz * (13+1) / (2+1) = 126 MHz; VCO = 126 * 4 = 504 MHz
+  rPLL #(
+    .FCLKIN("27"), .DEVICE("GW2AR-18C"),
+    .IDIV_SEL(2), .FBDIV_SEL(13), .ODIV_SEL(4),
+    .DYN_IDIV_SEL("false"), .DYN_FBDIV_SEL("false"), .DYN_ODIV_SEL("false"),
+    .DYN_SDIV_SEL(2), .PSDA_SEL("0000"), .DUTYDA_SEL("1000"),
+    .CLKFB_SEL("internal"), .CLKOUT_BYPASS("false"), .CLKOUTP_BYPASS("false"),
+    .CLKOUTD_BYPASS("false"), .CLKOUTD_SRC("CLKOUT"), .CLKOUTD3_SRC("CLKOUT")
+  ) pll (
+    .CLKIN(CLOCK_27), .CLKOUT(clk_tmds), .LOCK(pll_lock),
+    .CLKOUTP(), .CLKOUTD(), .CLKOUTD3(),
+    .RESET(1'b0), .RESET_P(1'b0), .CLKFB(1'b0),
+    .FBDSEL(6'b0), .IDSEL(6'b0), .ODSEL(6'b0),
+    .PSDA(4'b0), .DUTYDA(4'b0), .FDLY(4'b0));
+
+  CLKDIV #(.DIV_MODE("5"), .GSREN("false")) pixdiv (
+    .HCLKIN(clk_tmds), .RESETN(pll_lock), .CALIB(1'b0), .CLKOUT(clk_pix));
   `endif
 
-  // power-on reset
-  power_on_reset por(clk, reset);
-    
-  // microprocessor
-  riscvmulti cpu(clk, reset, addr, writedata, memwrite, readdata, writemask, halt);
+  // CPU, memoria e gerador de video no mesmo clock (o do pixel)
+  assign clk = clk_pix;
 
-  // memory 
+  // power-on reset + botao + espera do PLL travar
+  power_on_reset pwr(clk, por);
+  assign rst = por | reset | ~pll_lock;
+
+  // microprocessor
+  riscvmulti cpu(clk, rst, addr, writedata, memwrite, readdata, writemask, halt);
+
+  // memory
   mem ram(clk, memwrite, addr, writedata, readdata, writemask, 'h200 + vaddr, vdata);
 
-  // VGA controller
-  vga gpu(VGA_CLK, reset, VGA_HS, VGA_VS, VGA_DA, vaddr);
+  // HDMI controller
+  hdmi gpu(clk_pix, clk_tmds, rst, vbyte, vaddr,
+           tmds_clk_p, tmds_clk_n,
+           {tmds_d2_p, tmds_d1_p, tmds_d0_p}, {tmds_d2_n, tmds_d1_n, tmds_d0_n});
 
   // memory-mapped i/o
   wire isIO  = addr[8]; // 0x0000_0100
   wire isRAM = !isIO;
   localparam IO_LEDS_bit = 2; // 0x0000_0104
-  localparam IO_HEX_bit  = 3; // 0x0000_0108
-  reg [23:0] hex_digits; // memory-mapped I/O register for HEX
-  dec7seg hex0(hex_digits[ 3: 0], HEX0);
-  dec7seg hex1(hex_digits[ 7: 4], HEX1);
-  dec7seg hex2(hex_digits[11: 8], HEX2);
-  dec7seg hex3(hex_digits[15:12], HEX3);
-  dec7seg hex4(hex_digits[19:16], HEX4);
-  dec7seg hex5(hex_digits[23:20], HEX5);
   always @(posedge clk)
     if (memwrite & isIO) begin // memory-mapped I/O
       if (addr[IO_LEDS_bit])
         LEDR <= writedata;
-      if (addr[IO_HEX_bit])
-        hex_digits <= writedata;
     end
-  wire [VGA_BITS-3:0] fill = {VGA_BITS-2{1'b0}};
-  assign VGA_R = VGA_DA ? {vbyte[5:4], fill} : 0;
-  assign VGA_G = VGA_DA ? {vbyte[3:2], fill} : 0;
-  assign VGA_B = VGA_DA ? {vbyte[1:0], fill} : 0;
 endmodule
-

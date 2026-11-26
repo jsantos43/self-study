@@ -10,7 +10,8 @@ VIEWER=code
 # https://drom.io/vcd/?github=menotti/up1/master/processor/dump.vcd
 
 # Toolchain
-CROSS   = riscv64-unknown-elf
+# Ubuntu: riscv64-unknown-elf-*, Arch: riscv64-elf-*
+CROSS  ?= $(shell command -v riscv64-unknown-elf-as >/dev/null && echo riscv64-unknown-elf || echo riscv64-elf)
 AS      = $(CROSS)-as
 LD      = $(CROSS)-ld
 OBJCOPY = $(CROSS)-objcopy

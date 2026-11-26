@@ -212,10 +212,12 @@ module riscvmulti (
             endcase 
         end
 
+`ifndef SYNTHESIS
     always @(posedge clk) begin
         if (halt) begin
             $writememh("regs.out", RegisterBank);
             #10 $finish();
         end
     end
+`endif
 endmodule
