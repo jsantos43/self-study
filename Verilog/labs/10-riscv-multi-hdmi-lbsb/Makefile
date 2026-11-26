@@ -18,12 +18,15 @@ OBJCOPY = $(CROSS)-objcopy
 OBJDUMP = $(CROSS)-objdump
 
 # Arquivos
+# Uso: make PROG=creeper  (monta creeper.asm -> creeper.hex; padrao: riscv)
+PROG  ?= riscv
+NAME   = $(basename $(PROG))
 LDS    = riscv.ld
-SRC    = riscv.asm
-OBJ    = $(SRC:.asm=.o)
-ELF    = riscv.elf
-LST    = riscv.lst
-HEX	   = riscv.hex
+SRC    = $(NAME).asm
+OBJ    = $(NAME).o
+ELF    = $(NAME).elf
+LST    = $(NAME).lst
+HEX    = $(NAME).hex
 
 all: $(HEX) $(LST) simul
 

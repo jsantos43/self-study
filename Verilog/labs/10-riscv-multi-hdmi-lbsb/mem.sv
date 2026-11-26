@@ -6,12 +6,16 @@ module mem (
   input  logic [31:0] va,
   output logic [31:0] vd);
 
-  // 256 words of 4 bytes (packed so the byte-enable write maps to block RAM)
+  // 256 words of 4 bytes
+  // Na Tang Nano 20K (yosys + apicula) a escrita por byte na BSRAM grava
+  // nos bytes errados da palavra (sb), entao a memoria vai para LUTRAM,
+  // onde cada byte tem seu proprio write enable.
+  (* ram_style = "distributed" *)
   logic [3:0][7:0] RAM [0:255];
 
   // initialize memory with instructions and data
   initial
-    $readmemh("riscv.hex", RAM);
+    $readmemh("creeper.hex", RAM);
 
   // regular port (read/write, synchronous, byte-enable write mask)
   always_ff @(posedge clk)

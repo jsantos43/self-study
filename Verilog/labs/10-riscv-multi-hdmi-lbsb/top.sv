@@ -14,8 +14,13 @@ module top (
   wire [31:0] pc, instr;
   wire [31:0] writedata, addr, readdata;
   wire [31:0] vaddr, vdata;
-  wire [ 7:0] vbyte = vaddr[1] ? (vaddr[0] ? vdata[31:24] : vdata[23:16])
-                               : (vaddr[0] ? vdata[15: 8] : vdata[ 7: 0]);
+  // vdata chega 1 ciclo depois de vaddr (leitura sincrona), entao a escolha
+  // do byte tambem precisa ser atrasada 1 ciclo para casar com o dado
+  reg  [ 1:0] vsel;
+  always @(posedge clk)
+    vsel <= vaddr[1:0];
+  wire [ 7:0] vbyte = vsel[1] ? (vsel[0] ? vdata[31:24] : vdata[23:16])
+                              : (vsel[0] ? vdata[15: 8] : vdata[ 7: 0]);
 
   // clocks: pixel 25,2 MHz e TMDS 126 MHz (5x, serializacao DDR 10:1)
   wire clk_pix, clk_tmds, pll_lock;
